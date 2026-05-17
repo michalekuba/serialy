@@ -1,0 +1,275 @@
+:root {
+  --app-bg: #f4f5f7;
+  --panel-bg: #ffffff;
+  --border: #dfe3e8;
+  --text-main: #1f2937;
+  --text-soft: #6b7280;
+  --accent: #2d6cdf;
+  --accent-soft: #e9f0ff;
+  --tree-hover-bg: #f3f4f6;
+  --tree-hover-color: #1f2937;
+  --tree-active-bg: #e9f0ff;
+  --tree-active-color: #1e3a8a;
+}
+
+body {
+  background: var(--app-bg);
+  color: var(--text-main);
+  min-height: 100vh;
+}
+
+.app-navbar {
+  background: #ffffff;
+  border-bottom: 1px solid var(--border);
+}
+
+.navbar-brand {
+  color: var(--text-main);
+}
+
+.nav-link {
+  color: #4b5563;
+  border-radius: 0.5rem;
+  padding: 0.4rem 0.65rem;
+}
+
+.nav-link:hover,
+.nav-link:focus {
+  color: var(--text-main);
+  background: #f3f4f6;
+}
+
+.nav-link.active {
+  color: #0f172a;
+  background: var(--accent-soft);
+}
+
+#themeToggle {
+  color: #111111;
+  font-size: 1.2rem;
+  transition: color 0.15s ease, opacity 0.15s ease;
+}
+
+#themeToggle:hover {
+  color: #000000;
+  opacity: 0.8;
+}
+
+.panel {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 0.9rem;
+  overflow: hidden;
+}
+
+.panel-header {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: #fafafa;
+}
+
+.panel-body {
+  padding: 1rem;
+}
+
+.video-wrap {
+  background: #111827;
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+#videoPlayer {
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: #111827;
+}
+
+.tree-button {
+  width: 100%;
+  background: var(--panel-bg);
+  color: var(--text-main);
+  border: none;
+  padding: 0.65rem 0.9rem;
+  border-radius: 0.55rem;
+  text-align: left;
+  font-size: 0.95rem;
+  transition: background-color 0.15s ease;
+}
+
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+  transition: none !important;
+}
+
+.tree-button:hover,
+.tree-button:focus {
+  background: var(--tree-hover-bg);
+  color: var(--tree-hover-color);
+  box-shadow: none;
+}
+
+.tree-button.active {
+  background: var(--tree-active-bg);
+  color: var(--tree-active-color);
+}
+
+.season-title {
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+  color: #374151;
+}
+
+.accordion-button {
+  font-weight: 600;
+}
+
+.accordion-button:not(.collapsed) {
+  color: #1f2937;
+  background-color: #f9fafb;
+}
+
+@media (max-width: 991.98px) {
+  #videoPlayer {
+    max-height: 50vh;
+  }
+}
+
+/* Dark mode */
+html[data-theme="dark"],
+html[data-theme="dark"] body {
+  --app-bg: #0f172a;
+  --panel-bg: #1e293b;
+  --border: #334155;
+  --text-main: #f1f5f9;
+  --text-soft: #cbd5e1;
+  --accent: #3b82f6;
+  --accent-soft: #1e3a8a;
+  --tree-hover-bg: #334155;
+  --tree-hover-color: #f1f5f9;
+  --tree-active-bg: #1d4ed8;
+  --tree-active-color: #f8fafc;
+}
+
+html[data-theme="dark"] .app-navbar {
+  background: #1e293b;
+  border-bottom-color: #334155;
+}
+
+html[data-theme="dark"] .navbar-brand {
+  color: #f1f5f9;
+}
+
+html[data-theme="dark"] .nav-link {
+  color: #cbd5e1;
+}
+
+html[data-theme="dark"] .nav-link:hover,
+html[data-theme="dark"] .nav-link:focus {
+  color: #f1f5f9;
+  background: #334155;
+}
+
+html[data-theme="dark"] .nav-link.active {
+  color: #bfdbfe;
+  background: #1e3a8a;
+}
+
+html[data-theme="dark"] .panel-header {
+  background: #1f2937;
+  border-bottom-color: #334155;
+}
+
+html[data-theme="dark"] .panel {
+  background: var(--panel-bg);
+  border-color: var(--border);
+}
+
+html[data-theme="dark"] .text-muted {
+  color: var(--text-soft) !important;
+}
+
+
+html[data-theme="dark"] .accordion-button:not(.collapsed) {
+  color: #f1f5f9;
+  background-color: #334155;
+}
+
+html[data-theme="dark"] #themeToggle {
+  color: #ffffff;
+}
+
+html[data-theme="dark"] #themeToggle:hover {
+  color: #ffffff;
+  opacity: 0.85;
+}
+
+/* System preference for dark mode */
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme]) {
+    --app-bg: #0f172a;
+    --panel-bg: #1e293b;
+    --border: #334155;
+    --text-main: #f1f5f9;
+    --text-soft: #cbd5e1;
+    --accent: #3b82f6;
+    --accent-soft: #1e3a8a;
+    --tree-hover-bg: #334155;
+    --tree-hover-color: #f1f5f9;
+    --tree-active-bg: #1d4ed8;
+    --tree-active-color: #f8fafc;
+  }
+
+  html:not([data-theme]) .app-navbar {
+    background: #1e293b;
+    border-bottom-color: #334155;
+  }
+
+  html:not([data-theme]) .navbar-brand {
+    color: #f1f5f9;
+  }
+
+  html:not([data-theme]) .nav-link {
+    color: #cbd5e1;
+  }
+
+  html:not([data-theme]) .nav-link:hover,
+  html:not([data-theme]) .nav-link:focus {
+    color: #f1f5f9;
+    background: #334155;
+  }
+
+  html:not([data-theme]) .nav-link.active {
+    color: #bfdbfe;
+    background: #1e3a8a;
+  }
+
+  html:not([data-theme]) .panel-header {
+    background: #1f2937;
+    border-bottom-color: #334155;
+  }
+
+  html:not([data-theme]) .panel {
+    background: var(--panel-bg);
+    border-color: var(--border);
+  }
+
+  html:not([data-theme]) .text-muted {
+    color: var(--text-soft) !important;
+  }
+
+
+  html:not([data-theme]) .accordion-button:not(.collapsed) {
+    color: #f1f5f9;
+    background-color: #334155;
+  }
+
+  html:not([data-theme]) #themeToggle {
+    color: #ffffff;
+  }
+
+  html:not([data-theme]) #themeToggle:hover {
+    color: #ffffff;
+    opacity: 0.85;
+  }
+}
