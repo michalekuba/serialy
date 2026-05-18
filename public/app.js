@@ -1,11 +1,10 @@
 const mainContent = document.getElementById('mainContent');
-const showNav = document.getElementById('showNav');
 
 const APP_BASE_URL = new URL('.', window.location.href);
 const VIDEO_EXTENSIONS = new Set(['.mp4', '.mkv', '.webm', '.mov', '.avi', '.m4v']);
 const SERIALS_ROOT_CANDIDATES = Array.from(new Set([
-  new URL('serialy/', APP_BASE_URL).pathname,
-  '/serialy/',
+  new URL('files/', APP_BASE_URL).pathname,
+  '/files/',
   APP_BASE_URL.pathname
 ]));
 
@@ -358,69 +357,6 @@ function createEpisodeButton(showName, seasonName, episode, onSelect) {
   return button;
 }
 
-function renderFlatEpisodeList(show) {
-  const list = document.createElement('div');
-  list.className = 'd-flex flex-column gap-2';
-
-  const season = show.seasons[0];
-  for (const episode of season.episodes) {
-    list.appendChild(createEpisodeButton(show.name, season.name, episode));
-  }
-
-  return list;
-}
-
-function renderSeasonAccordion(show) {
-  const accordion = document.createElement('div');
-  accordion.className = 'accordion';
-  accordion.id = `seasonAccordion-${activeShowIndex}`;
-
-  show.seasons.forEach((season, seasonIndex) => {
-    const collapseId = `collapse-${activeShowIndex}-${seasonIndex}`;
-    const headingId = `heading-${activeShowIndex}-${seasonIndex}`;
-    const item = document.createElement('div');
-    item.className = 'accordion-item';
-
-    const header = document.createElement('h2');
-    header.className = 'accordion-header';
-    header.id = headingId;
-
-    const headerButton = document.createElement('button');
-    headerButton.className = `accordion-button ${seasonIndex === 0 ? '' : 'collapsed'}`;
-    headerButton.type = 'button';
-    headerButton.setAttribute('data-bs-toggle', 'collapse');
-    headerButton.setAttribute('data-bs-target', `#${collapseId}`);
-    headerButton.setAttribute('aria-expanded', seasonIndex === 0 ? 'true' : 'false');
-    headerButton.setAttribute('aria-controls', collapseId);
-    headerButton.textContent = season.name;
-
-    header.appendChild(headerButton);
-
-    const collapse = document.createElement('div');
-    collapse.id = collapseId;
-    collapse.className = `accordion-collapse collapse ${seasonIndex === 0 ? 'show' : ''}`;
-    collapse.setAttribute('aria-labelledby', headingId);
-    collapse.setAttribute('data-bs-parent', `#${accordion.id}`);
-
-    const body = document.createElement('div');
-    body.className = 'accordion-body d-flex flex-column gap-2';
-
-    season.episodes.forEach((episode) => {
-      body.appendChild(createEpisodeButton(show.name, season.name, episode));
-    });
-
-    collapse.appendChild(body);
-    item.appendChild(header);
-    item.appendChild(collapse);
-    accordion.appendChild(item);
-  });
-
-  return accordion;
-}
-
-function renderNavbar() {
-  clearElement(showNav);
-}
 
 function renderEpisodeTree(container, onSelect) {
   clearElement(container);
@@ -664,8 +600,6 @@ async function initialize() {
     serialsRootPath = await detectSerialsRootPath();
     shows = await loadShowsIndex();
     flatEpisodes = buildFlatEpisodes();
-
-    renderNavbar();
 
     initializeTheme();
 
