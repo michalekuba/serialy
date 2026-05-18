@@ -675,6 +675,9 @@ async function initialize() {
       }
       initializeTheme();
       renderMainContent();
+      if (episodePath && activeEpisodeIndex < 0) {
+        setPlayerFromPathFallback(episodePath);
+      }
       return;
     }
   }
@@ -696,6 +699,10 @@ async function initialize() {
     }
 
     renderMainContent();
+
+    if (pageMode === 'player' && episodePath && activeEpisodeIndex < 0) {
+      setPlayerFromPathFallback(episodePath);
+    }
   } catch (error) {
     console.error('Nepodařilo se načíst data:', error);
 
