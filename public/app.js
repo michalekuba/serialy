@@ -7,6 +7,7 @@ const SERIALS_ROOT_CANDIDATES = Array.from(new Set([
   '/files/',
   APP_BASE_URL.pathname
 ]));
+const INDEX_CACHE_KEY = 'serialyIndexV1';
 
 let shows = [];
 let activeEpisodePath = null;
@@ -18,6 +19,31 @@ let activeEpisodeIndex = -1;
 function clearElement(element) {
   while (element.firstChild) {
     element.removeChild(element.firstChild);
+  }
+}
+
+function loadIndexCache() {
+  try {
+    const raw = sessionStorage.getItem(INDEX_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || !Array.isArray(parsed.shows)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function saveIndexCache() {
+  try {
+    const payload = {
+      serialsRootPath,
+      shows,
+      flatEpisodes
+    };
+    sessionStorage.setItem(INDEX_CACHE_KEY, JSON.stringify(payload));
+  } catch {
+    // ignore
   }
 }
 
@@ -570,6 +596,35 @@ function setActiveEpisodeByIndex(index, skipUrlUpdate = false) {
   updatePlayerNavButtons();
 }
 
+function setPlayerFromPathFallback(episodePath) {
+  const videoPlayer = document.getElementById('videoPlayer');
+  const playerTitle = document.getElementById('playerTitle');
+  const playerMeta = document.getElementById('playerMeta');
+
+  const parts = episodePath.split('/').filter(Boolean);
+  const filesIndex = parts.lastIndexOf('files');
+  const showName = filesIndex >= 0 && parts.length > filesIndex + 1
+    ? decodeURIComponent(parts[filesIndex + 1])
+    : 'Seriál';
+  const fileName = getFileNameWithoutExtension(getDisplayNameFromPath(episodePath));
+
+  if (videoPlayer) {
+    videoPlayer.src = episodePath;
+    videoPlayer.load();
+  }
+
+  if (playerTitle) {
+    playerTitle.textContent = fileName;
+  }
+
+  if (playerMeta) {
+    playerMeta.textContent = showName;
+  }
+
+  document.title = `${showName} | ${fileName}`;
+  updatePlayerNavButtons();
+}
+
 function updatePlayerNavButtons() {
   const prevButton = document.getElementById('prevEpisodeBtn');
   const nextButton = document.getElementById('nextEpisodeBtn');
@@ -602,15 +657,15 @@ function wirePlayerControls() {
 }
 
 async function initialize() {
-  try {
-    serialsRootPath = await detectSerialsRootPath();
-    shows = await loadShowsIndex();
-    flatEpisodes = buildFlatEpisodes();
+  const pageMode = getPageMode();
+  const episodePath = pageMode === 'player' ? getEpisodeFromUrl() : null;
 
-    initializeTheme();
-
-    if (getPageMode() === 'player') {
-      const episodePath = getEpisodeFromUrl();
+  if (pageMode === 'player') {
+    const cached = loadIndexCache();
+    if (cached) {
+      serialsRootPath = cached.serialsRootPath || serialsRootPath;
+      shows = cached.shows || [];
+      flatEpisodes = cached.flatEpisodes || buildFlatEpisodes();
       if (episodePath) {
         const index = flatEpisodes.findIndex((item) => item.episode.path === episodePath);
         if (index >= 0) {
@@ -618,11 +673,38 @@ async function initialize() {
           activeEpisodePath = episodePath;
         }
       }
+      initializeTheme();
+      renderMainContent();
+      return;
+    }
+  }
+
+  try {
+    serialsRootPath = await detectSerialsRootPath();
+    shows = await loadShowsIndex();
+    flatEpisodes = buildFlatEpisodes();
+    saveIndexCache();
+
+    initializeTheme();
+
+    if (pageMode === 'player' && episodePath) {
+      const index = flatEpisodes.findIndex((item) => item.episode.path === episodePath);
+      if (index >= 0) {
+        activeEpisodeIndex = index;
+        activeEpisodePath = episodePath;
+      }
     }
 
     renderMainContent();
   } catch (error) {
     console.error('Nepodařilo se načíst data:', error);
+
+    if (pageMode === 'player' && episodePath) {
+      renderMainContent();
+      setPlayerFromPathFallback(episodePath);
+      return;
+    }
+
     clearElement(mainContent);
 
     const container = document.createElement('div');
