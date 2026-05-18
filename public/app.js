@@ -13,6 +13,8 @@ let shows = [];
 let activeEpisodePath = null;
 let expandedShows = new Set();
 let serialsRootPath = SERIALS_ROOT_CANDIDATES[0];
+let flatEpisodes = [];
+let activeEpisodeIndex = -1;
 
 function clearElement(element) {
   while (element.firstChild) {
@@ -228,45 +230,17 @@ async function detectSerialsRootPath() {
 }
 
 function renderMainContent() {
-  clearElement(mainContent);
-
-  const rowDiv = document.createElement('div');
-  rowDiv.className = 'row g-3 g-lg-4';
-
-  const sidebarAside = createSidebarPanel();
-  rowDiv.appendChild(sidebarAside);
-
-  if (activeEpisodePath === null) {
-    const placeholderSection = document.createElement('section');
-    placeholderSection.className = 'col-12 col-lg-8 col-xl-9';
-
-    const panel = document.createElement('div');
-    panel.className = 'panel h-100 d-flex align-items-center justify-content-center';
-    panel.style.minHeight = '60vh';
-
-    const message = document.createElement('p');
-    message.className = 'text-center text-muted';
-    message.textContent = 'Vyberte díl ze seznamu vlevo.';
-
-    panel.appendChild(message);
-    placeholderSection.appendChild(panel);
-    rowDiv.appendChild(placeholderSection);
+  const mode = getPageMode();
+  if (mode === 'player') {
+    renderPlayerPage();
   } else {
-    const playerSection = createPlayerSection();
-    rowDiv.appendChild(playerSection);
-  }
-
-  mainContent.appendChild(rowDiv);
-  renderSidebar();
-
-  if (activeEpisodePath !== null) {
-    resetPlayerMessage();
+    renderListPage();
   }
 }
 
-function createSidebarPanel() {
-  const aside = document.createElement('aside');
-  aside.className = 'col-12 col-lg-4 col-xl-3';
+function createListPanel() {
+  const section = document.createElement('section');
+  section.className = 'col-12';
 
   const panel = document.createElement('div');
   panel.className = 'panel h-100';
@@ -275,12 +249,15 @@ function createSidebarPanel() {
   header.className = 'panel-header';
   const title = document.createElement('h2');
   title.className = 'h6 mb-0';
-  title.textContent = 'Díly';
+  const listIcon = document.createElement('i');
+  listIcon.className = 'bi bi-list-ul me-2';
+  title.appendChild(listIcon);
+  title.appendChild(document.createTextNode('Seznam'));
   header.appendChild(title);
 
   const body = document.createElement('div');
   body.className = 'panel-body';
-  body.id = 'sidebarContent';
+  body.id = 'listContent';
 
   const loading = document.createElement('p');
   loading.className = 'text-muted small mb-0';
@@ -289,17 +266,17 @@ function createSidebarPanel() {
 
   panel.appendChild(header);
   panel.appendChild(body);
-  aside.appendChild(panel);
+  section.appendChild(panel);
 
-  return aside;
+  return section;
 }
 
 function createPlayerSection() {
   const section = document.createElement('section');
-  section.className = 'col-12 col-lg-8 col-xl-9';
+  section.className = 'col-12';
 
   const panel = document.createElement('div');
-  panel.className = 'panel h-100';
+  panel.className = 'panel h-100 player-panel';
 
   const header = document.createElement('div');
   header.className = 'panel-header d-flex flex-column flex-md-row justify-content-between gap-2';
@@ -334,6 +311,31 @@ function createPlayerSection() {
   videoWrap.appendChild(video);
   body.appendChild(videoWrap);
 
+  const actions = document.createElement('div');
+  actions.className = 'd-flex flex-row flex-wrap justify-content-between gap-2 mt-3 player-actions';
+
+  const prevButton = document.createElement('button');
+  prevButton.className = 'btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2';
+  prevButton.type = 'button';
+  prevButton.id = 'prevEpisodeBtn';
+  prevButton.innerHTML = '<i class="bi bi-rewind-fill"></i>Předchozí díl';
+
+  const backLink = document.createElement('a');
+  backLink.className = 'btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2';
+  backLink.href = 'index.html';
+  backLink.innerHTML = '<i class="bi bi-list-ul"></i>Zpět na seznam';
+
+  const nextButton = document.createElement('button');
+  nextButton.className = 'btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2';
+  nextButton.type = 'button';
+  nextButton.id = 'nextEpisodeBtn';
+  nextButton.innerHTML = '<i class="bi bi-fast-forward-fill"></i>Další díl';
+
+  actions.appendChild(prevButton);
+  actions.appendChild(backLink);
+  actions.appendChild(nextButton);
+  body.appendChild(actions);
+
   panel.appendChild(header);
   panel.appendChild(body);
   section.appendChild(panel);
@@ -341,34 +343,18 @@ function createPlayerSection() {
   return section;
 }
 
-function playEpisode(showName, seasonName, episode) {
-  activeEpisodePath = episode.path;
-  renderMainContent();
-
-  const videoPlayer = document.getElementById('videoPlayer');
-  const playerTitle = document.getElementById('playerTitle');
-  const playerMeta = document.getElementById('playerMeta');
-
-  if (videoPlayer) {
-    videoPlayer.src = episode.path;
-    videoPlayer.load();
-  }
-
-  if (playerTitle) {
-    playerTitle.textContent = episode.name;
-  }
-
-  if (playerMeta) {
-    playerMeta.textContent = `${showName} | ${seasonName}`;
-  }
+function navigateToEpisode(episodePath) {
+  const target = new URL('player.html', window.location.href);
+  target.searchParams.set('episode', episodePath);
+  window.location.href = target.toString();
 }
 
-function createEpisodeButton(showName, seasonName, episode) {
+function createEpisodeButton(showName, seasonName, episode, onSelect) {
   const button = document.createElement('button');
   button.type = 'button';
   button.className = `tree-button ${episode.path === activeEpisodePath ? 'active' : ''}`;
   button.textContent = episode.name;
-  button.addEventListener('click', () => playEpisode(showName, seasonName, episode));
+  button.addEventListener('click', () => onSelect(showName, seasonName, episode));
   return button;
 }
 
@@ -436,17 +422,14 @@ function renderNavbar() {
   clearElement(showNav);
 }
 
-function renderSidebar() {
-  const sidebarContent = document.getElementById('sidebarContent');
-  if (!sidebarContent) return;
-
-  clearElement(sidebarContent);
+function renderEpisodeTree(container, onSelect) {
+  clearElement(container);
 
   if (shows.length === 0) {
     const empty = document.createElement('p');
     empty.className = 'text-muted small mb-0';
     empty.textContent = `Ve složce ${serialsRootPath} zatím nebyly nalezeny žádné seriály.`;
-    sidebarContent.appendChild(empty);
+    container.appendChild(empty);
     return;
   }
 
@@ -458,15 +441,23 @@ function renderSidebar() {
 
     const showButton = document.createElement('button');
     showButton.type = 'button';
-    showButton.className = 'tree-button';
-    showButton.textContent = show.name;
+    showButton.className = `tree-button tree-toggle ${showIsExpanded ? 'is-expanded' : ''}`;
+
+    const showLabel = document.createElement('span');
+    showLabel.textContent = show.name;
+
+    const showIcon = document.createElement('i');
+    showIcon.className = `bi ${showIsExpanded ? 'bi-caret-down-fill' : 'bi-caret-right-fill'} tree-icon`;
+
+    showButton.appendChild(showLabel);
+    showButton.appendChild(showIcon);
     showButton.addEventListener('click', () => {
       if (expandedShows.has(showIndex)) {
         expandedShows.delete(showIndex);
       } else {
         expandedShows.add(showIndex);
       }
-      renderSidebar();
+      renderEpisodeTree(container, onSelect);
     });
     tree.appendChild(showButton);
 
@@ -480,15 +471,23 @@ function renderSidebar() {
 
         const seasonButton = document.createElement('button');
         seasonButton.type = 'button';
-        seasonButton.className = 'tree-button';
-        seasonButton.textContent = season.name;
+        seasonButton.className = `tree-button tree-toggle ${seasonIsExpanded ? 'is-expanded' : ''}`;
+
+        const seasonLabel = document.createElement('span');
+        seasonLabel.textContent = season.name;
+
+        const seasonIcon = document.createElement('i');
+        seasonIcon.className = `bi ${seasonIsExpanded ? 'bi-caret-down-fill' : 'bi-caret-right-fill'} tree-icon`;
+
+        seasonButton.appendChild(seasonLabel);
+        seasonButton.appendChild(seasonIcon);
         seasonButton.addEventListener('click', () => {
           if (expandedShows.has(seasonKey)) {
             expandedShows.delete(seasonKey);
           } else {
             expandedShows.add(seasonKey);
           }
-          renderSidebar();
+          renderEpisodeTree(container, onSelect);
         });
         seasonsContainer.appendChild(seasonButton);
 
@@ -497,7 +496,7 @@ function renderSidebar() {
           episodesContainer.className = 'ms-3 d-flex flex-column gap-1';
 
           season.episodes.forEach((episode) => {
-            episodesContainer.appendChild(createEpisodeButton(show.name, season.name, episode));
+            episodesContainer.appendChild(createEpisodeButton(show.name, season.name, episode, onSelect));
           });
           seasonsContainer.appendChild(episodesContainer);
         }
@@ -507,7 +506,7 @@ function renderSidebar() {
     }
   });
 
-  sidebarContent.appendChild(tree);
+  container.appendChild(tree);
 }
 
 function resetPlayerMessage() {
@@ -518,16 +517,169 @@ function resetPlayerMessage() {
 
   playerTitle.textContent = 'Přehrávač';
   playerMeta.textContent = '';
+
+  if (getPageMode() === 'player') {
+    document.title = 'Seriály | Přehrávač';
+  }
+}
+
+function getPageMode() {
+  return document.body.dataset.page || 'list';
+}
+
+function renderListPage() {
+  clearElement(mainContent);
+
+  const rowDiv = document.createElement('div');
+  rowDiv.className = 'row g-3 g-lg-4';
+
+  const listSection = createListPanel();
+  rowDiv.appendChild(listSection);
+
+  mainContent.appendChild(rowDiv);
+
+  const listContent = document.getElementById('listContent');
+  if (listContent) {
+    renderEpisodeTree(listContent, (showName, seasonName, episode) => {
+      navigateToEpisode(episode.path);
+    });
+  }
+}
+
+function renderPlayerPage() {
+  clearElement(mainContent);
+
+  const rowDiv = document.createElement('div');
+  rowDiv.className = 'row g-3 g-lg-4';
+
+  const playerSection = createPlayerSection();
+  rowDiv.appendChild(playerSection);
+  mainContent.appendChild(rowDiv);
+
+  wirePlayerControls();
+
+  if (activeEpisodeIndex >= 0) {
+    setActiveEpisodeByIndex(activeEpisodeIndex, true);
+  } else {
+    resetPlayerMessage();
+    updatePlayerNavButtons();
+  }
+}
+
+function buildFlatEpisodes() {
+  const list = [];
+  shows.forEach((show) => {
+    show.seasons.forEach((season) => {
+      season.episodes.forEach((episode) => {
+        list.push({
+          showName: show.name,
+          seasonName: season.name,
+          episode
+        });
+      });
+    });
+  });
+  return list;
+}
+
+function getEpisodeFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const raw = params.get('episode');
+  if (!raw) return null;
+  return raw;
+}
+
+function updateEpisodeUrl(path) {
+  const url = new URL(window.location.href);
+  url.searchParams.set('episode', path);
+  window.history.replaceState({}, '', url);
+}
+
+function setActiveEpisodeByIndex(index, skipUrlUpdate = false) {
+  if (index < 0 || index >= flatEpisodes.length) return;
+
+  activeEpisodeIndex = index;
+  const current = flatEpisodes[index];
+  activeEpisodePath = current.episode.path;
+
+  if (!skipUrlUpdate) {
+    updateEpisodeUrl(activeEpisodePath);
+  }
+
+  const videoPlayer = document.getElementById('videoPlayer');
+  const playerTitle = document.getElementById('playerTitle');
+  const playerMeta = document.getElementById('playerMeta');
+
+  if (videoPlayer) {
+    videoPlayer.src = current.episode.path;
+    videoPlayer.load();
+  }
+
+  if (playerTitle) {
+    playerTitle.textContent = current.episode.name;
+  }
+
+  if (playerMeta) {
+    playerMeta.textContent = current.showName;
+  }
+
+  document.title = `${current.showName} | ${current.episode.name}`;
+
+  updatePlayerNavButtons();
+}
+
+function updatePlayerNavButtons() {
+  const prevButton = document.getElementById('prevEpisodeBtn');
+  const nextButton = document.getElementById('nextEpisodeBtn');
+
+  if (!prevButton || !nextButton) return;
+
+  prevButton.disabled = activeEpisodeIndex <= 0;
+  nextButton.disabled = activeEpisodeIndex < 0 || activeEpisodeIndex >= flatEpisodes.length - 1;
+}
+
+function wirePlayerControls() {
+  const prevButton = document.getElementById('prevEpisodeBtn');
+  const nextButton = document.getElementById('nextEpisodeBtn');
+
+  if (prevButton) {
+    prevButton.addEventListener('click', () => {
+      if (activeEpisodeIndex > 0) {
+        setActiveEpisodeByIndex(activeEpisodeIndex - 1);
+      }
+    });
+  }
+
+  if (nextButton) {
+    nextButton.addEventListener('click', () => {
+      if (activeEpisodeIndex >= 0 && activeEpisodeIndex < flatEpisodes.length - 1) {
+        setActiveEpisodeByIndex(activeEpisodeIndex + 1);
+      }
+    });
+  }
 }
 
 async function initialize() {
   try {
     serialsRootPath = await detectSerialsRootPath();
     shows = await loadShowsIndex();
+    flatEpisodes = buildFlatEpisodes();
 
     renderNavbar();
 
-      initializeTheme();
+    initializeTheme();
+
+    if (getPageMode() === 'player') {
+      const episodePath = getEpisodeFromUrl();
+      if (episodePath) {
+        const index = flatEpisodes.findIndex((item) => item.episode.path === episodePath);
+        if (index >= 0) {
+          activeEpisodeIndex = index;
+          activeEpisodePath = episodePath;
+        }
+      }
+    }
+
     renderMainContent();
   } catch (error) {
     console.error('Nepodařilo se načíst data:', error);

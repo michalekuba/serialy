@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Seriály | Seznam</title>
+    <title>Seriály | Přehrávač</title>
     <script>
       (function () {
         const path = window.location.pathname;
@@ -22,29 +22,29 @@
       crossorigin="anonymous"
     />
     <link rel="stylesheet" href="public/styles.css" />
-      <link
-        rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
-      />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
+    />
   </head>
-  <body data-page="list">
+  <body data-page="player">
     <nav class="navbar navbar-expand-lg app-navbar">
       <div class="container d-flex align-items-center">
-        <a class="navbar-brand fw-semibold me-3 mb-0" href="#">
+        <a class="navbar-brand fw-semibold me-3 mb-0" href="index.html">
           <i class="bi bi-film me-2"></i>
           Seriály
         </a>
         <div class="d-flex align-items-center ms-3" id="navbarShows">
           <ul class="navbar-nav" id="showNav"></ul>
         </div>
-              <button
-                id="themeToggle"
-                class="btn btn-link text-decoration-none p-2 ms-auto"
-                type="button"
-                aria-label="Přepnout motiv"
-              >
-                <i class="bi bi-brightness-high-fill"></i>
-              </button>
+        <button
+          id="themeToggle"
+          class="btn btn-link text-decoration-none p-2 ms-auto"
+          type="button"
+          aria-label="Přepnout motiv"
+        >
+          <i class="bi bi-brightness-high-fill"></i>
+        </button>
       </div>
     </nav>
 
