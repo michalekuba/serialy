@@ -138,20 +138,6 @@ html.theme-switching *::after {
   color: var(--tree-active-color);
 }
 
-.season-title {
-  font-size: 0.9rem;
-  letter-spacing: 0.02em;
-  color: #374151;
-}
-
-.accordion-button {
-  font-weight: 600;
-}
-
-.accordion-button:not(.collapsed) {
-  color: #1f2937;
-  background-color: #f9fafb;
-}
 
 @media (max-width: 991.98px) {
   #videoPlayer {
@@ -218,10 +204,6 @@ html[data-theme="dark"] .text-muted {
 }
 
 
-html[data-theme="dark"] .accordion-button:not(.collapsed) {
-  color: #f1f5f9;
-  background-color: #334155;
-}
 
 html[data-theme="dark"] #themeToggle {
   color: #ffffff;
@@ -287,10 +269,6 @@ html[data-theme="dark"] #themeToggle:hover {
   }
 
 
-  html:not([data-theme]) .accordion-button:not(.collapsed) {
-    color: #f1f5f9;
-    background-color: #334155;
-  }
 
   html:not([data-theme]) #themeToggle {
     color: #ffffff;

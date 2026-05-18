@@ -88,6 +88,10 @@ function toVideoSrc(pathname) {
   return encodeURI(normalizeEpisodePath(pathname));
 }
 
+function isIOSDevice() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent);
+}
+
 function sortByName(a, b) {
   return a.name.localeCompare(b.name, 'cs');
 }
@@ -361,7 +365,7 @@ function createPlayerSection() {
   const video = document.createElement('video');
   video.id = 'videoPlayer';
   video.controls = true;
-  video.preload = 'metadata';
+  video.preload = isIOSDevice() ? 'none' : 'metadata';
   if (video.controlsList && typeof video.controlsList.add === 'function') {
     video.controlsList.add('nodownload');
   }
@@ -415,7 +419,6 @@ function createEpisodeButton(showName, seasonName, episode, onSelect) {
   button.addEventListener('click', () => onSelect(showName, seasonName, episode));
   return button;
 }
-
 
 function renderEpisodeTree(container, onSelect) {
   clearElement(container);
@@ -607,7 +610,9 @@ function setActiveEpisodeByIndex(index, skipUrlUpdate = false) {
 
   if (videoPlayer) {
     videoPlayer.src = toVideoSrc(current.episode.path);
-    videoPlayer.load();
+    if (!isIOSDevice()) {
+      videoPlayer.load();
+    }
   }
 
   if (playerTitle) {
@@ -638,7 +643,9 @@ function setPlayerFromPathFallback(episodePath) {
 
   if (videoPlayer) {
     videoPlayer.src = toVideoSrc(normalizedPath);
-    videoPlayer.load();
+    if (!isIOSDevice()) {
+      videoPlayer.load();
+    }
   }
 
   if (playerTitle) {
@@ -709,9 +716,7 @@ async function initialize() {
           activeEpisodePath = episodePath;
         }
       }
-      if (pageMode !== 'player') {
-        renderMainContent();
-      } else if (activeEpisodeIndex >= 0) {
+      if (activeEpisodeIndex >= 0) {
         setActiveEpisodeByIndex(activeEpisodeIndex, true);
       }
       return;
