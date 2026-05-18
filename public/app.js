@@ -50,7 +50,13 @@ function normalizeDirectoryPath(pathname) {
 
 async function fetchDirectoryEntries(pathname) {
   const normalizedDirectory = normalizeDirectoryPath(pathname);
-  const response = await fetch(normalizedDirectory, { cache: 'no-store' });
+  const response = await fetch(normalizedDirectory, {
+    cache: 'no-store',
+    credentials: 'same-origin',
+    headers: {
+      Accept: 'text/html'
+    }
+  });
 
   if (!response.ok) {
     throw new Error(`Nepodařilo se načíst složku ${normalizedDirectory}`);
